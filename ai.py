@@ -1,25 +1,10 @@
+#This program connects to a arduino running firmata to control it's wheels.
+
 import pyfirmata2
-import pywhatkit
 import speech_recognition as sr
 import pyttsx3
-
-import openai
-
-openai.api_key = 'Your api key'
-messages = [{"role": "system", "content": "You are a intelligent assistant."}]
-
-wake = "hey jarvis"
-light_conditions = ["on", "off"]
-
-# from time import sleep
-
 board = pyfirmata2.Arduino('COM3')
-
-ledPin = board.get_pin('d:11:p')
-# Initialize the recognizer
 r = sr.Recognizer()
-
-sw = ["what is", "define"]
 
 
 def SpeakText(command):
@@ -28,23 +13,6 @@ def SpeakText(command):
     engine.say(command)
     engine.runAndWait()
 
-
-
-def search_chatgpt(command):
-    if command:
-        messages.append(
-            {"role": "user", "content": Command},
-        )
-        chat = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", messages=messages
-        )
-    reply = chat.choices[0].message.content
-    print(f"ChatGPT: {reply}")
-    messages.append({"role": "assistant", "content": reply})
-
-
-# Loop infinitely for user to
-# speak
 
 while 1:
 
@@ -66,7 +34,7 @@ while 1:
             # Using google to recognize audio
             MyText = r.recognize_google(audio2)
             MyText = MyText.lower()
-
+            wake = "hey jarvis"
             if MyText.count(wake) > 0:
                 print(MyText)
                 print("What can i do for you today?")
@@ -76,22 +44,42 @@ while 1:
                 Command = r.recognize_google(audio2)
                 Command = Command.lower()
                 print(Command)
-                if Command == "lamp on":
-                    ledPin.write(5)
-                    SpeakText("Ok sir turning lamp on")
-
-                elif Command == "lamp off":
-                    ledPin.write(0)
-                    SpeakText("Ok sir turning lamp off")
-                elif "what is" in Command:
-                    print("hello")
-                    search_chatgpt(Command)
-                elif "play" in Command:
-                    song = Command[Command.index("play")+2:]
-                    pywhatkit.playonyt(song)
-
+                if Command == "move forward":
+                    board.digital[13].write(1)
+                    board.digital[12].write(0)
+                    board.digital[10].write(1)
+                    board.digital[11].write(0)
+                elif Command == "move backward":
+                    board.digital[13].write(0)
+                    board.digital[12].write(1)
+                    board.digital[10].write(0)
+                    board.digital[11].write(1)
+                elif Command == "turn left":
+                    board.digital[13].write(1)
+                    board.digital[12].write(0)
+                    board.digital[10].write(0)
+                    board.digital[11].write(0)
+                elif Command == "turn right":
+                    board.digital[13].write(0)
+                    board.digital[12].write(0)
+                    board.digital[10].write(1)
+                    board.digital[11].write(0)
+                elif Command == "stop":
+                    board.digital[13].write(0)
+                    board.digital[12].write(0)
+                    board.digital[10].write(0)
+                    board.digital[11].write(0)
+                    board.digital[9].write(0)
+                    board.digital[8].write(0)
+                elif Command == "shoot":
+                    board.digital[9].write(1)
+                    board.digital[8].write(0)
                 else:
-                    print("Command not recognized")
+                    SpeakText("command is not known")
+                    board.digital[13].write(0)
+                    board.digital[12].write(0)
+                    board.digital[10].write(0)
+                    board.digital[11].write(0)
 
     except sr.RequestError as e:
         print("Could not request results; {0}".format(e))
